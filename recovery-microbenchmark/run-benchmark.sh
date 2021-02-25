@@ -26,3 +26,4 @@ for file in leases-output.csv by_value-output.csv ownership-output.csv; do
     cat $file >> "$output"
     rm $file
 done
+echo "Output written at $output"

@@ -52,7 +52,7 @@ auth:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 head_node:
-    InstanceType: m5.xlarge
+    InstanceType: m5.8xlarge
     ImageId: ami-0a2363a9cff180a64
 
     # Additional options in the boto docs.
@@ -62,7 +62,7 @@ head_node:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 worker_nodes:
-    InstanceType: m5.xlarge
+    InstanceType: m5.8xlarge
     ImageId: ami-0a2363a9cff180a64
 
 # Files or directories to copy to the head and worker nodes. The format is a
@@ -94,7 +94,7 @@ head_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
     - sudo pkill -9 raylet || true
     - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --head --redis-port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100}"
+    - source activate tensorflow_p36 && ray start --head --redis-port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100, \"centralized_owner\":1}"
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
@@ -102,4 +102,4 @@ worker_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
     - sudo pkill -9 raylet || true
     - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100}"
+    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100, \"centralized_owner\":1}" --num-cpus=32

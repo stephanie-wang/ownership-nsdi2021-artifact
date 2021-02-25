@@ -1,18 +1,5 @@
 # An unique identifier for the head node and workers of this cluster.
-cluster_name: ray
-
-# The minimum number of workers nodes to launch in addition to the head
-# node. This number should be >= 0.
-min_workers: 1
-
-# The maximum number of workers nodes to launch in addition to the head
-# node. This takes precedence over min_workers.
-max_workers: 1
-
-# The initial number of worker nodes to launch in addition to the head
-# node. When the cluster is first brought up (or when it is refreshed with a
-# subsequent `ray up`) this number of nodes will be started.
-initial_workers: 1
+cluster_name: ray_ownership
 
 # Whether or not to autoscale aggressively. If this is enabled, if at any point
 #   we would start more workers, we start at least enough to bring us to
@@ -47,14 +34,22 @@ auth:
 # configurations below.
 #    ssh_private_key: /path/to/your/key.pem
 
+available_node_types:
+    cpu32:
+        node_config:
+            InstanceType: m5.8xlarge
+        # For AWS instances, autoscaler will automatically add the available
+        # CPUs/GPUs/accelerator_type ({"CPU": 4} for m4.xlarge) in "resources".
+        resources: {"CPU": 32}
+        min_workers: 0
+        max_workers: 0
 # Provider-specific config for the head node, e.g. instance type. By default
 # Ray will auto-configure unspecified fields such as SubnetId and KeyName.
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
+head_node_type: cpu32
 head_node:
-    InstanceType: m5.xlarge
     ImageId: ami-0a2363a9cff180a64
-
     # Additional options in the boto docs.
 
 # Provider-specific config for worker nodes, e.g. instance type. By default
@@ -62,7 +57,6 @@ head_node:
 # For more documentation on available fields, see:
 # http://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.ServiceResource.create_instances
 worker_nodes:
-    InstanceType: m5.xlarge
     ImageId: ami-0a2363a9cff180a64
 
 # Files or directories to copy to the head and worker nodes. The format is a
@@ -78,7 +72,7 @@ initialization_commands: []
 # List of shell commands to run to set up nodes.
 setup_commands:
     - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
-    - source activate tensorflow_p36 && pip install -U ownership-nsdi21-artifact/baselines-whl/ray-0.7.7-cp36-cp36m-manylinux1_x86_64.whl
+    - source activate tensorflow_p36 && pip install -U ownership-nsdi21-artifact/ownership-whl/ray-2.0.0.dev0-cp36-cp36m-manylinux2014_x86_64.whl
 
 # Custom commands that will be run on the head node after common setup.
 head_setup_commands:
@@ -91,15 +85,9 @@ worker_setup_commands: []
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
-    - source activate tensorflow_p36 && ray stop
-    - sudo pkill -9 raylet || true
-    - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --head --redis-port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100}"
+    - source activate tensorflow_p36 && ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --enable-object-reconstruction --system-config="{\"record_ref_creation_sites\":0, \"object_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_push_timeout_ms\":100, \"task_retry_delay_ms\":100, \"max_direct_call_object_size\":10737418240, \"max_grpc_message_size\":-1}"
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
-    - source activate tensorflow_p36 && ray stop
-    - sudo pkill -9 raylet || true
-    - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":100}"
+    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076
