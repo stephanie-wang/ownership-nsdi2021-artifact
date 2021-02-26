@@ -72,6 +72,7 @@ initialization_commands: []
 # List of shell commands to run to set up nodes.
 setup_commands:
     - echo 'export PATH="$HOME/anaconda3/envs/tensorflow_p36/bin:$PATH"' >> ~/.bashrc
+    - pip install -U protobuf
     - source activate tensorflow_p36 && pip install -U ownership-nsdi21-artifact/ownership-whl/ray-2.0.0.dev0-cp36-cp36m-manylinux2014_x86_64.whl
 
 # Custom commands that will be run on the head node after common setup.
