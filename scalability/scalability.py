@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import csv
 import socket
 import time
 import datetime
@@ -36,28 +37,6 @@ def get_local_node_resource():
     return addr
 
 
-def do_ray_init(opts):
-    internal_config = {"record_ref_creation_sites": 0}
-    if opts.system == CENTRALIZED:
-        internal_config["centralized_owner"] = 1
-    elif opts.system == BY_VALUE:
-        # Set threshold to 1 TiB to force everything to be inlined.
-        internal_config["max_direct_call_object_size"] = 1024**4
-        internal_config["max_grpc_message_size"] = -1
-    elif opts.system in [OWNERSHIP, LEASES]:
-        internal_config = None
-    else:
-        assert False
-
-    if internal_config is not None:
-        print("Starting ray with:", internal_config)
-        ray.init(address="auto", _internal_config=json.dumps(internal_config))
-    else:
-        print("Starting ray with no internal config.")
-        ray.init(address="auto")
-
-
-
 def timeit(fn, trials=1, multiplier=1):
     start = time.time()
     for _ in range(1):
@@ -75,6 +54,29 @@ def timeit(fn, trials=1, multiplier=1):
         print("\tthroughput:", stats[-1])
     print("avg per second", round(np.mean(stats), 2), "+-",
           round(np.std(stats), 2))
+
+    if args.output:
+        file_exists = False
+        try:
+            os.stat(args.output)
+            file_exists = True
+        except:
+            pass
+
+        with open(args.output, 'a+') as csvfile:
+            fieldnames = ['system', 'arg_size', 'colocated', 'num_nodes', 'throughput']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            if not file_exists:
+                writer.writeheader()
+            for throughput in stats:
+                writer.writerow({
+                    'system': args.system,
+                    'arg_size': args.arg_size,
+                    'colocated': args.colocated,
+                    'num_nodes': args.num_nodes,
+                    'throughput': throughput,
+                    })
 
 
 @ray.remote
@@ -112,25 +114,25 @@ def do_batch(use_small, node_ids, args=None):
 
 
 def main(opts):
-    do_ray_init(opts)
+    ray.init(address="auto")
 
     node_ids = get_node_ids()
-    assert opts.num_nodes % NODES_PER_DRIVER == 0
-    num_drivers = int(opts.num_nodes / NODES_PER_DRIVER)
-    while len(node_ids) < opts.num_nodes + num_drivers:
-        print("{} / {} nodes have joined, sleeping for 1s...".format(
-            len(node_ids), opts.num_nodes + num_drivers))
-        time.sleep(1)
+    assert args.num_nodes % NODES_PER_DRIVER == 0
+    num_drivers = int(args.num_nodes / NODES_PER_DRIVER)
+    while len(node_ids) < args.num_nodes + num_drivers:
+        print("{} / {} nodes have joined, sleeping for 5s...".format(
+            len(node_ids), args.num_nodes + num_drivers))
+        time.sleep(5)
         node_ids = get_node_ids()
 
-    print("All {} nodes joined: {}".format(len(node_ids), node_ids))
-    worker_node_ids = list(node_ids)[:opts.num_nodes]
-    driver_node_ids = list(node_ids)[opts.num_nodes:opts.num_nodes +
+    print("All {} nodes joined.".format(len(node_ids)))
+    worker_node_ids = list(node_ids)[:args.num_nodes]
+    driver_node_ids = list(node_ids)[args.num_nodes:args.num_nodes +
                                      num_drivers]
 
     use_small = args.arg_size == "small"
 
-    @ray.remote(num_cpus=4 if opts.multi_node else 0)
+    @ray.remote(num_cpus=4 if not args.colocated else 0)
     class Driver:
         def __init__(self, node_ids):
             # print("Driver starting with nodes:", node_ids)
@@ -148,23 +150,19 @@ def main(opts):
 
     drivers = []
     for i in range(num_drivers):
-        if opts.multi_node:
-            node_id = driver_node_ids[i]
-        else:
+        if args.colocated:
             node_id = get_local_node_resource()
+        else:
+            node_id = driver_node_ids[i]
         resources = {node_id: 0.001}
         worker_nodes = worker_node_ids[i * NODES_PER_DRIVER:(i + 1) *
                                        NODES_PER_DRIVER]
         drivers.append(
             Driver.options(resources=resources).remote(worker_nodes))
-
-    ray.get([driver.ready.remote() for driver in drivers])
-
-    def job():
-        ray.get([driver.do_batch.remote() for driver in drivers])
+        ray.get(drivers[i].ready.remote())
 
     timeit(
-        job,
+        lambda: ray.get([driver.do_batch.remote() for driver in drivers]),
         multiplier=len(worker_node_ids) * TASKS_PER_NODE_PER_BATCH *
         CHAIN_LENGTH)
 
@@ -179,15 +177,24 @@ if __name__ == "__main__":
         required=True,
         help="Number of nodes in the cluster")
     parser.add_argument(
-        "--multi-node",
-        type=bool,
+        "--colocated",
+        type=str,
         required=True,
-        help="Whether to put drivers on separate nodes")
+        help="Whether to put drivers on the same node.")
     parser.add_argument("--system", type=str, required=True)
+    parser.add_argument("--output", type=str, required=False)
     args = parser.parse_args()
+
+    if args.colocated in ["True", "true"]:
+        args.colocated = True
+    elif args.colocated in ["False", "false"]:
+        args.colocated = False
+    else:
+        raise ValueError("--colocated must be true or false")
 
     if args.system not in [OWNERSHIP, LEASES, CENTRALIZED, BY_VALUE]:
         raise ValueError("--system must be one of {}".format([OWNERSHIP, LEASES, CENTRALIZED, BY_VALUE]))
     if args.arg_size not in [SMALL_ARG, LARGE_ARG]:
         raise ValueError("--arg-size must be one of {}".format([SMALL_ARG, LARGE_ARG]))
+    print(f"Running with args:", args)
     main(args)
