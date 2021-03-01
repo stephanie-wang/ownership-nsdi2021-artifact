@@ -67,24 +67,14 @@ if __name__ == '__main__':
         plt.figure(figsize=(7.5, 3))
 
     if args.failure:
-        if args.final:
-            curves = [
-                (leases_failure, "L; WF", 'dashed'),
-                (ownership_owner_failure, "O; OF", 'dotted'),
-                (ownership_owner_checkpoint_failure, "O+CP; OF", 'solid'),
-                (ownership_failure, "O; WF", 'dotted'),
-                (ownership_checkpoint, "O+CP", 'solid'),
-                (ownership, "O", 'dotted'),
-            ]
-        else:
-            curves = [
-                (leases_failure, "Leases; Worker failure", 'dashed'),
-                (ownership_owner_failure, "Ownership; Owner failure", 'dotted'),
-                (ownership_owner_checkpoint_failure, "Ownership+checkpoint; Owner failure", 'solid'),
-                (ownership_failure, "Ownership; Worker failure", 'dotted'),
-                (ownership_checkpoint, "Ownership+checkpoint", 'solid'),
-                (ownership, "Ownership", 'dotted'),
-            ]
+        curves = [
+            (leases_failure, "L; WF", 'dashed'),
+            (ownership_owner_failure, "O; OF", 'dotted'),
+            (ownership_owner_checkpoint_failure, "O+CP; OF", 'solid'),
+            (ownership_failure, "O; WF", 'dotted'),
+            (ownership_checkpoint, "O+CP", 'solid'),
+            (ownership, "O", 'dotted'),
+        ]
         legend_order = [
             0, 3, 5, 2, 4, 1,
         ]
@@ -107,7 +97,6 @@ if __name__ == '__main__':
         plt.ylabel("CDF")
         
 
-    plt.tight_layout()
     if args.zoom:
         plt.ylim(args.zoom / 100, 1)
     else:
@@ -128,6 +117,7 @@ if __name__ == '__main__':
     else:
         plt.legend()
 
+    plt.tight_layout()
     if args.save:
         if args.final:
             ext = "pdf"

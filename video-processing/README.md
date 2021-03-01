@@ -43,3 +43,12 @@ You can also plot the failure results. Here is an example, zoomed in on the 90th
 python plot.py --num-nodes 60 --failure --zoom 90
 ```
 ![latency-failure](latency-failure-60.png)
+
+Here, the legend is:
+
+- L; WF=Leases; Worker failure
+- O; OF=Ownership; Owner failure
+- O+CP; OF=Ownership+checkpoint; Owner failure
+- O; WF=Ownership; Worker failure
+- O+CP=Ownership+checkpoint
+- O=Ownership
