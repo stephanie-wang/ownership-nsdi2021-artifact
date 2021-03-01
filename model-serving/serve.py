@@ -260,7 +260,7 @@ class Client:
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description="Run the video benchmark.")
+    parser = argparse.ArgumentParser()
 
     parser.add_argument("--num-nodes", required=True, type=int)
     parser.add_argument("--num-batches-per-node", required=True, type=int)

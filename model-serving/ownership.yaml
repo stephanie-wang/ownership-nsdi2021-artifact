@@ -94,7 +94,7 @@ worker_setup_commands: []
 # Command to start ray on the head node. You don't need to change this.
 head_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
-    - source activate tensorflow_p36 && ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --enable-object-reconstruction --system-config="{\"record_ref_creation_sites\":0, \"object_timeout_milliseconds\":100000, \"num_heartbeats_timeout\":10, \"object_manager_push_timeout_ms\":100, \"task_retry_delay_ms\":100, \"raylet_heartbeat_period_milliseconds\":1000, \"worker_lease_timeout_milliseconds\":0, \"kill_idle_workers_interval_ms,\":0}"
+    - source activate tensorflow_p36 && ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --enable-object-reconstruction --system-config="{\"record_ref_creation_sites\":0, \"object_timeout_milliseconds\":100000, \"num_heartbeats_timeout\":10, \"object_manager_push_timeout_ms\":100, \"task_retry_delay_ms\":100, \"raylet_heartbeat_period_milliseconds\":1000, \"worker_lease_timeout_milliseconds\":0, \"kill_idle_workers_interval_ms\":0}"
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
