@@ -7,12 +7,12 @@ output=$3
 extra_args=$4
 
 if [ -z `ls "$system.yaml.template"` ]; then
-    echo "Usage: ./run.sh <centralized|leases|ownership> <skip restart?> <number of concurrent videos>"
+    echo "Usage: ./run.sh <centralized|leases|ownership> <number of concurrent videos> <output filename>"
     exit -1
 fi
 
 if [ -z $num_videos ]; then
-    echo "Usage: ./run.sh <centralized|leases|ownership> <skip restart?> <number of concurrent videos>"
+    echo "Usage: ./run.sh <centralized|leases|ownership> <number of concurrent videos> <output filename>"
     exit -1
 fi
 
