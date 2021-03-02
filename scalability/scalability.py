@@ -23,12 +23,21 @@ LARGE_ARG = "large"
 
 
 def get_node_ids():
-    my_ip = ".".join(socket.gethostname().split("-")[1:])
-    node_ids = set()
-    for resource in ray.available_resources():
-        if "node" in resource and my_ip not in resource:
-            node_ids.add(resource)
-    return node_ids
+    my_ip = socket.gethostbyname(socket.gethostname())
+    head_node_resource = "node:{}".format(my_ip)
+
+    node_resources = []
+    nodes = ray.nodes()
+    for node in nodes:
+        if not node["Alive"]:
+            continue
+        if head_node_resource in node["Resources"]:
+            continue
+        for r in node["Resources"]:
+            if "node" in r and not my_ip in r:
+                node_resources.append(r)
+
+    return node_resources
 
 
 def get_local_node_resource():

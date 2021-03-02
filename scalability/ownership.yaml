@@ -102,7 +102,7 @@ head_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
     - source activate tensorflow_p36 && ray stop
     - sudo pkill -9 raylet || true
-    - source activate tensorflow_p36 && ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --enable-object-reconstruction --system-config="{\"record_ref_creation_sites\":0, \"object_timeout_milliseconds\":10000, \"num_heartbeats_timeout\":100, \"object_manager_push_timeout_ms\":10000, \"task_retry_delay_ms\":10000, \"max_tasks_in_flight_per_worker\":100, \"free_objects_period_milliseconds\":-1, \"ownership_based_object_directory_enabled\":1}" --redis-shard-ports="10000,10001,10002,10003,10004,10005,10006,10007,10008,10009,10010,10011,10012,10013"
+    - source activate tensorflow_p36 && ray start --head --port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --enable-object-reconstruction --system-config="{\"record_ref_creation_sites\":0, \"object_timeout_milliseconds\":10000, \"num_heartbeats_timeout\":100, \"object_manager_push_timeout_ms\":10000, \"task_retry_delay_ms\":10000, \"max_tasks_in_flight_per_worker\":100, \"free_objects_period_milliseconds\":-1, \"ownership_based_object_directory_enabled\":1, \"kill_idle_workers_interval_ms\":0}" --redis-shard-ports="10000,10001,10002,10003,10004,10005,10006,10007,10008,10009,10010,10011,10012,10013"
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:

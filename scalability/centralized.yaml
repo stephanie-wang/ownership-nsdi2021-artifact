@@ -1,5 +1,5 @@
 # An unique identifier for the head node and workers of this cluster.
-cluster_name: ray
+cluster_name: ray_0_7
 
 # The minimum number of workers nodes to launch in addition to the head
 # node. This number should be >= 0.
@@ -68,7 +68,7 @@ worker_nodes:
 # Files or directories to copy to the head and worker nodes. The format is a
 # dictionary from REMOTE_PATH: LOCAL_PATH, e.g.
 file_mounts:
-    /home/ubuntu/ownership-nsdi21-artifact: /home/swang/ownership-nsdi21-artifact
+    /home/ubuntu/ownership-nsdi21-artifact: /home/ubuntu/ownership-nsdi2021-artifact
 
 # List of commands that will be run before `setup_commands`. If docker is
 # enabled, these commands will run outside the container and before docker
@@ -94,7 +94,7 @@ head_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
     - sudo pkill -9 raylet || true
     - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --head --redis-port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --num-cpus=0 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":1000, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":1000, \"centralized_owner\":1}" --num-redis-shards 12
+    - source activate tensorflow_p36 && ray start --head --redis-port=6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100000, \"num_heartbeats_timeout\":100, \"object_manager_repeated_push_delay_ms\":1000, \"object_table_shards\":12, \"centralized_owner\":1}" --num-cpus=0 --num-redis-shards 14
 
 # Command to start ray on worker nodes. You don't need to change this.
 worker_start_ray_commands:
@@ -102,4 +102,4 @@ worker_start_ray_commands:
     - source activate tensorflow_p36 && ray stop
     - sudo pkill -9 raylet || true
     - sudo pkill -9 plasma || true
-    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --internal-config="{\"initial_reconstruction_timeout_milliseconds\":1000, \"num_heartbeats_timeout\":10, \"object_manager_repeated_push_delay_ms\":1000, \"centralized_owner\":1}" --num-cpus=32
+    - source activate tensorflow_p36 && ray start --address=$RAY_HEAD_IP:6379 --object-manager-port=8076 --autoscaling-config=~/ray_bootstrap_config.yaml --internal-config="{\"initial_reconstruction_timeout_milliseconds\":100000, \"num_heartbeats_timeout\":100, \"object_manager_repeated_push_delay_ms\":1000, \"object_table_shards\":12, \"centralized_owner\":1}"
