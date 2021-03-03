@@ -5,7 +5,8 @@ import csv
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--filename", default='scalability.csv')
+parser.add_argument("--filename", default='output-Wed Mar  3 05:44:38 UTC 2021.csv')
+args = parser.parse_args()
 
 Key = namedtuple('Key', ['system', 'small', 'colocated'])
 OWNERSHIP = "ownership"

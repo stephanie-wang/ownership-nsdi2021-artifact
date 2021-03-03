@@ -14,6 +14,7 @@ function run() {
 
 source activate ray-0-7
 
+ray down -y centralized.yaml
 ray up -y centralized.yaml
 ray exec centralized.yaml "rm -f output.csv"
 run "centralized" "small" "false"
@@ -24,7 +25,9 @@ run "centralized" "large" "false"
 ray up -y centralized.yaml
 run "centralized" "large" "true"
 ray rsync-down centralized.yaml output.csv centralized.csv
+ray down -y centralized.yaml
 
+ray down -y leases.yaml
 ray up -y leases.yaml
 ray exec leases.yaml "rm -f output.csv"
 run "leases" "small" "false"
@@ -41,6 +44,7 @@ conda deactivate
 
 source activate ray-wheel
 
+ray down -y ownership.yaml
 ray up -y ownership.yaml
 ray exec ownership.yaml "rm -f output.csv"
 run "ownership" "small" "false"
@@ -51,7 +55,9 @@ run "ownership" "large" "false"
 ray up -y ownership.yaml
 run "ownership" "large" "true"
 ray rsync-down ownership.yaml output.csv ownership.csv
+ray down -y ownership.yaml
 
+ray down -y by_value.yaml
 ray up -y by_value.yaml
 ray exec by_value.yaml "rm -f output.csv"
 run "by_value" "small" "false"

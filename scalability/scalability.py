@@ -22,28 +22,25 @@ SMALL_ARG = "small"
 LARGE_ARG = "large"
 
 
-def get_node_ids():
-    my_ip = socket.gethostbyname(socket.gethostname())
-    head_node_resource = "node:{}".format(my_ip)
-
+def get_node_ids(local_ip):
     node_resources = []
     nodes = ray.nodes()
     for node in nodes:
         if not node["Alive"]:
             continue
-        if head_node_resource in node["Resources"]:
-            continue
         for r in node["Resources"]:
-            if "node" in r and not my_ip in r:
+            if "node" in r and not local_ip in r:
                 node_resources.append(r)
 
     return node_resources
 
-
-def get_local_node_resource():
-    my_ip = ".".join(socket.gethostname().split("-")[1:])
-    addr = "node:{}".format(my_ip)
-    return addr
+def get_local_ip_address():
+    while True:
+        try:
+            return ".".join(socket.gethostname().split("-")[1:])
+        except socket.gaierror:
+            print("Failed to resolve local hostname. Retrying in 1s...")
+            time.sleep(1)
 
 
 def timeit(fn, trials=1, multiplier=1):
@@ -125,16 +122,21 @@ def do_batch(use_small, node_ids, args=None):
 def main(opts):
     ray.init(address="auto")
 
-    node_ids = get_node_ids()
+    local_ip = get_local_ip_address()
+    node_ids = get_node_ids(local_ip)
     assert args.num_nodes % NODES_PER_DRIVER == 0
     num_drivers = int(args.num_nodes / NODES_PER_DRIVER)
-    while len(node_ids) < args.num_nodes + num_drivers:
+    while len(node_ids) < 120:
         print("{} / {} nodes have joined, sleeping for 5s...".format(
-            len(node_ids), args.num_nodes + num_drivers))
+            len(node_ids), 120))
         time.sleep(5)
-        node_ids = get_node_ids()
+        node_ids = get_node_ids(local_ip)
+        if len(node_ids) == 120:
+            print("All 120 nodes joined. Giving 5s grace period before starting.")
+            time.sleep(5)
+            node_ids = get_node_ids(local_ip)
 
-    print("All {} nodes joined.".format(len(node_ids)))
+    print("Running workload...")
     worker_node_ids = list(node_ids)[:args.num_nodes]
     driver_node_ids = list(node_ids)[args.num_nodes:args.num_nodes +
                                      num_drivers]
@@ -160,7 +162,7 @@ def main(opts):
     drivers = []
     for i in range(num_drivers):
         if args.colocated:
-            node_id = get_local_node_resource()
+            node_id = "node:{}".format(local_ip)
         else:
             node_id = driver_node_ids[i]
         resources = {node_id: 0.001}
